@@ -2,4 +2,7 @@ module github.com/suguanyang/csapp
 
 go 1.15
 
-require github.com/magiconair/properties v1.8.4
+require (
+	github.com/magiconair/properties v1.8.4
+	github.com/stretchr/testify v1.6.1
+)
