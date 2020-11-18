@@ -10,7 +10,7 @@ void show_bytes(pointer start, size_t len) {
 }
 
 int main() {
-  int a = 15122;
+  double a = 1.1;
   show_bytes((pointer) &a, sizeof(a));
 
   return 0;

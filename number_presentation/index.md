@@ -77,6 +77,13 @@ Conventions:
 > Little Endian: x86, ARM processors runing Android, IOS, and Windows
   - Least signification byte has lowest address
 
+## Reverse
+reverse(x) = ~x + 1
+0 1 1 1 => 7
+1 0 0 0 + 1 => -7
+
+1 1 1 1 => -1
+0 0 0 0 + 1 => 1
 
 
 ## Extra
@@ -89,3 +96,89 @@ Conventions:
   - String should be null-terminated
     - Final character = 0
   - Byter ordering not an issue
+
+
+## Fractional Binary Numbers
+![Binary float](../assets/binary_numbers.png)
+
+|                Value              | Binary |
+|-----------------------------------|--------|
+| 5<sup>3</sup>&frasl;<sub>4</sub>  | 101.11 |
+| 2<sup>7</sup>&frasl;<sub>8</sub>  | 10.111 |
+| 1<sup>7</sup>&frasl;<sub>16</sub> | 1.0111 |
+<!-- 1.1 = 11/10 1 -->
+- Divide by 2 by shifting right 1 bit
+- Multiply by 2 by shifting left 1 bit
+- Numbers of form 0.1111111111..... are just below 1.0
+
+
+## IEEE Floating-Point Representation
+The IEEE floating-point standard represents a number in a form V = (-1)<sup>s</sup> x M x 2<sup>E</sup>
+
+![float point](../assets/float_point.png)
+
+The bit representation of a floating-pointer number is didvided into three fields to encoded these value:
+- The single sign bit *s* directly encodes the sign *s*
+- The k-bit exponent field exp = e<sub>k-1</sub>...e<sub>1</sub>e<sub>0</sub> encodes the exponent E = exp - bias.
+- The n-bit fraction field frac = f<sub>k-1</sub>...f<sub>1</sub>f<sub>0</sub> encodes the significand M, but the value encoded also depends on whether or not the exponent field equals 0.
+
+The significand is defined to be M = 1 + f . This is sometimes called an implied leading 1 representation, because we can view M to be the number with binary representation 1.fn−1fn−2 . . . f0. This representation is a trick for getting an additional bit of precision for free, since we can always adjust the exponent E so that significand M is in the range 1 ≤ M < 2 (assuming there is no overflow). We therefore do not need to explicitly represent the leading bit, since it always equals 1.
+
+## Categories of single-precision floating-point values.
+![Categories](../assets/categories_of_single_precision_floating_point.png)
+
+### Normalized values
+- When exp != 000...0 and exp != 111...1
+- Exponent coded as a biased value: E = Exp - Bias
+  - Exp: unsigned value of exp field
+  - Bias = 2<sup>k-1</sup> - 1, where k is the number if exponent bits
+
+- Significand coded with implied leading 1: M = 1.xxx...x
+  - xxx...x: bits of frac field
+  - Minimum when frac = 000...0(M = 1.0)
+  - Maximum when frac = 111...1(M = 2.0 - `e`)
+  - Get extra leading bit for free
+
+15213 = 11101101101101
+      
+      = 1.1101101101101 x 2<sup>13</sup>
+M     = 1.1101101101101
+
+frac  =   11011011011010000000000
+
+E     = 13
+
+Bias  = 127
+
+Exp   = 140 = 10001100
+
+-------------------
+float a = 1.1;
+
+a     = 0 01111111 00011001100110011001101
+
+S     = 0
+
+M     = 1.00011001100110011001101 x 2<sup>0</sup>
+
+E     = 0
+
+Bias  = 127
+
+Exp   = 01111111 = 0 + 127 = 127
+
+Actual Value = 1.10000002384185791015625
+
+------------------
+double b= 1.1;
+
+Actual Value = 1.10000000000000008881784197001;
+> with double we can only represent 1/2**51 about 4e-16, so 1.10000000000000008881784197001 will round to 1.1
+
+## Denormalized Values
+When the exponent field is all zeros, the represented number is in denormalized form. In this case, the exponent value is E = 1 − Bias, and the significand value is M = f , that is, the value of the fraction field without an implied leading 1.
+Denormalized numbers serve two purposes. First, they provide a way to represent numeric value 0, since with a normalized number we must always have M ≥ 1, and hence we cannot represent 0. In fact, the floating-point representation of +0.0 has a bit pattern of all zeros: the sign bit is 0, the exponent field is all zeros (indicating a denormalized value), and the fraction field is all zeros, giving M = f = 0. Curiously, when the sign bit is 1, but the other fields are all zeros, we get the value −0.0. With IEEE floating-point format, the values −0.0 and +0.0 are considered different in some ways and the same in others.
+A second function of denormalized numbers is to represent numbers that are very close to 0.0. They provide a property known as gradual underflow in which possible numeric values are spaced evenly near 0.0.
+
+## Why set the bias this way for denormalized values?
+![float point encoding](../assets/float_point_encoding_visualization.png)
